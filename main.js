@@ -77,7 +77,7 @@ if(Deno.args.length == 2 && Deno.args[0] == 'remove'){
         }
     });
     p = Deno.run({cmd: ["crontab"], stdout: 'piped',stdin: 'piped',});
-    await p.stdin.write(new TextEncoder("utf-8").encode(l1.join("\n")));
+    await p.stdin.write(new TextEncoder("utf-8").encode(l1.join("\n")+"\n"));
     await p.stdin.close();
     await p.output();
     p.close();
