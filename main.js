@@ -96,7 +96,7 @@ Deno.args.forEach((v, i) => {
         c1 = v;
         return;
     }
-    a += `"${v}" `;
+    a += v.indexOf(' ') != -1 ? `"${v}" ` : `${v} `;
 });
 a = a.trim();
 
