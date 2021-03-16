@@ -2,7 +2,7 @@
 
 [English](readme.md)
 
-Boa可以添加开机自动命令
+Boa可以添加开机自动启动命令
 
 ### 用 [nami](https://github.com/txthinking/nami) 安装
 

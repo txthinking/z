@@ -36,7 +36,7 @@ if(Deno.args.length == 1 && ['version', '-v', '--version'].indexOf(Deno.args[0])
 }
 
 if(Deno.args.length == 1 && Deno.args[0] == 'list'){
-    var p = Deno.run({cmd: ["crontab", "-l"], stdout: 'piped',});
+    var p = Deno.run({cmd: ["crontab", "-l"], stdout: 'piped', stderr: 'null'});
     var s = new TextDecoder("utf-8").decode(await p.output());
     p.close();
     var l = [];
@@ -66,7 +66,7 @@ if(Deno.args.length == 2 && Deno.args[0] == 'remove'){
     if(l.length == 0 || i > l.length-1){
         Deno.exit(0);
     }
-    var p = Deno.run({cmd: ["crontab", "-l"], stdout: 'piped',});
+    var p = Deno.run({cmd: ["crontab", "-l"], stdout: 'piped', stderr: 'null'});
     var s = new TextDecoder("utf-8").decode(await p.output());
     p.close();
     var l1 = [];
@@ -128,7 +128,7 @@ if(a != ''){
     c += ` ${a}`;
 }
 
-var p = Deno.run({cmd: ["crontab", "-l"], stdout: 'piped',});
+var p = Deno.run({cmd: ["crontab", "-l"], stdout: 'piped', stderr: 'null'});
 var s = new TextDecoder("utf-8").decode(await p.output());
 p.close();
 var l = [];
@@ -142,7 +142,7 @@ l.push(`@reboot ${c}`);
 l = Array.from(new Set(l))
 
 p = Deno.run({cmd: ["crontab"], stdout: 'piped',stdin: 'piped',});
-await p.stdin.write(new TextEncoder("utf-8").encode(l.join("\n")));
+await p.stdin.write(new TextEncoder("utf-8").encode(l.join("\n")+"\n"));
 await p.stdin.close();
 await p.output();
 p.close();
