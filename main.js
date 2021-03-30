@@ -14,7 +14,7 @@
 
 var help = () => {
 console.log(`
-boa: auto start command at boot
+jinbe: auto start command at boot
 
         <command>   add a command
         list        show added commands
