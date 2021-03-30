@@ -33,6 +33,10 @@ $ nami install github.com/txthinking/jinbe
 
 Because systemd is very complicated
 
+## Author
+
+A project by [txthinking](https://www.txthinking.com)
+
 ## License
 
 Licensed under The GPLv3 License
