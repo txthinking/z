@@ -1,18 +1,18 @@
-# Boa
+# Jinbe
 
 [English](readme.md)
 
-Boa可以添加开机自动启动命令
+Jinbe可以添加开机自动启动命令
 
 ### 用 [nami](https://github.com/txthinking/nami) 安装
 
 ```
-$ nami install github.com/brook-community/boa
+$ nami install github.com/txthinking/jinbe
 ```
 
 ### 使用
 
-	boa: auto start command at boot
+	jinbe: auto start command at boot
 
         <command>   add a command
         list        show added commands
@@ -23,15 +23,19 @@ $ nami install github.com/brook-community/boa
 
 ### 举例
 
-    $ boa brook server -l :9999 -p password
+    $ jinbe brook server -l :9999 -p password
 
 	# 或
 
-    $ boa joker brook server -l :9999 -p password
+    $ jinbe joker brook server -l :9999 -p password
 
 ### 为什么
 
 因为systemd非常复杂
+
+## 作者
+
+A project by [txthinking](https://www.txthinking.com)
 
 ## 开源协议
 
