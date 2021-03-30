@@ -31,7 +31,7 @@ if(Deno.args.length == 0 || (Deno.args.length == 1 && ['help', '-h', '--help'].i
 }
 
 if(Deno.args.length == 1 && ['version', '-v', '--version'].indexOf(Deno.args[0]) != -1){
-    console.log("v20210214");
+    console.log("v20210401");
     Deno.exit(0);
 }
 
