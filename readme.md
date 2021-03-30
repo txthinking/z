@@ -1,18 +1,18 @@
-# Boa
+# Jinbe
 
 [中文](readme_zh.md)
 
-Boa can add auto start command at boot
+Jinbe can add auto start command at boot
 
 ### Install via [nami](https://github.com/txthinking/nami)
 
 ```
-$ nami install github.com/brook-community/boa
+$ nami install github.com/txthinking/jinbe
 ```
 
 ### Usage
 
-	boa: auto start command at boot
+	jinbe: auto start command at boot
 
         <command>   add a command
         list        show added commands
@@ -23,11 +23,11 @@ $ nami install github.com/brook-community/boa
 
 ### Example
 
-    $ boa brook server -l :9999 -p password
+    $ jinbe brook server -l :9999 -p password
 
 	# OR
 
-    $ boa joker brook server -l :9999 -p password
+    $ jinbe joker brook server -l :9999 -p password
 
 ### Why
 
