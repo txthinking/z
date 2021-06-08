@@ -4,6 +4,8 @@
 
 Jinbe可以添加开机自动启动命令
 
+❤️ A project by [txthinking.com](https://www.txthinking.com)
+
 ### 用 [nami](https://github.com/txthinking/nami) 安装
 
 ```
@@ -32,10 +34,6 @@ $ nami install github.com/txthinking/jinbe
 ### 为什么
 
 因为systemd非常复杂
-
-## 作者
-
-A project by [txthinking](https://www.txthinking.com)
 
 ## 开源协议
 
