@@ -4,6 +4,8 @@
 
 Jinbe can add auto start command at boot
 
+❤️ A project by [txthinking.com](https://www.txthinking.com)
+
 ### Install via [nami](https://github.com/txthinking/nami)
 
 ```
@@ -32,10 +34,6 @@ $ nami install github.com/txthinking/jinbe
 ### Why
 
 Because systemd is very complicated
-
-## Author
-
-A project by [txthinking](https://www.txthinking.com)
 
 ## License
 
