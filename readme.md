@@ -9,7 +9,7 @@ Jinbe can add auto start command at boot
 ### Install via [nami](https://github.com/txthinking/nami)
 
 ```
-$ nami install github.com/txthinking/jinbe
+$ nami install jinbe
 ```
 
 ### Usage
