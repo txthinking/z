@@ -9,7 +9,7 @@ Jinbe可以添加开机自动启动命令
 ### 用 [nami](https://github.com/txthinking/nami) 安装
 
 ```
-$ nami install github.com/txthinking/jinbe
+$ nami install jinbe
 ```
 
 ### 使用
