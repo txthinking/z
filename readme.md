@@ -2,6 +2,11 @@
 
 [中文](readme_zh.md)
 
+[🗣 Talks](https://t.me/txthinking_talks)
+[💬 Join](https://join.txthinking.com)
+[🩸 Youtube](https://www.youtube.com/txthinking) 
+[❤️ Sponsor](https://github.com/sponsors/txthinking)
+
 Jinbe can add auto start command at boot
 
 ❤️ A project by [txthinking.com](https://www.txthinking.com)
