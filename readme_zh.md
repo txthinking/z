@@ -2,6 +2,11 @@
 
 [English](readme.md)
 
+[🗣 Talks](https://t.me/txthinking_talks)
+[💬 Join](https://join.txthinking.com)
+[🩸 Youtube](https://www.youtube.com/txthinking) 
+[❤️ Sponsor](https://github.com/sponsors/txthinking)
+
 Jinbe可以添加开机自动启动命令
 
 ❤️ A project by [txthinking.com](https://www.txthinking.com)
