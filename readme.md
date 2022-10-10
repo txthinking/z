@@ -2,8 +2,8 @@
 
 [中文](readme_zh.md)
 
-[🗣 News](https://t.me/txthinking_news)
-[💬 Chat](https://join.txthinking.com)
+[🗣 News](https://t.me/s/txthinking_news)
+[💬 Telegram](https://t.me/brookgroup)
 [🩸 Youtube](https://www.youtube.com/txthinking) 
 [❤️ Sponsor](https://github.com/sponsors/txthinking)
 
