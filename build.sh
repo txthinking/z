@@ -7,9 +7,10 @@ fi
 
 mkdir _
 
-deno compile -A -r --unstable --target x86_64-unknown-linux-gnu -o _/jinbe_linux_amd64 https://raw.githubusercontent.com/txthinking/jinbe/master/main.js
-deno compile -A -r --unstable --target x86_64-apple-darwin -o _/jinbe_darwin_amd64 https://raw.githubusercontent.com/txthinking/jinbe/master/main.js
-deno compile -A -r --unstable --target aarch64-apple-darwin -o _/jinbe_darwin_arm64 https://raw.githubusercontent.com/txthinking/jinbe/master/main.js
+CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-w -s" -o _/jinbe_darwin_arm64
+CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-w -s" -o _/jinbe_darwin_amd64
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o _/jinbe_linux_amd64
+CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-w -s" -o _/jinbe_linux_arm64
 
 nami release github.com/txthinking/jinbe $1 _
 
