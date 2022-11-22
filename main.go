@@ -42,7 +42,18 @@ func main() {
 		return
 	}
 	if len(os.Args) == 2 && (os.Args[1] == "version" || os.Args[1] == "-v" || os.Args[1] == "--version") {
-		fmt.Println("v20221010")
+		fmt.Println("v20221122")
+		return
+	}
+	if len(os.Args) == 2 && os.Args[1] == "list.hancock" {
+		b, _ := exec.Command("crontab", "-l").Output()
+		l := strings.Split(string(b), "\n")
+		for i, v := range l {
+			v = strings.TrimSpace(v)
+			if v != "" {
+				fmt.Println(strings.Replace(v, "@reboot", strconv.Itoa(i)+"\t", 1))
+			}
+		}
 		return
 	}
 	if len(os.Args) == 2 && os.Args[1] == "list" {

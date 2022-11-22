@@ -4,8 +4,7 @@
 
 [🗣 News](https://t.me/s/txthinking_news)
 [💬 Telegram](https://t.me/brookgroup)
-[🩸 Youtube](https://www.youtube.com/txthinking) 
-[❤️ Sponsor](https://github.com/sponsors/txthinking)
+[🩸 Youtube](https://www.youtube.com/txthinking)
 
 Jinbe can add auto start command at boot
 

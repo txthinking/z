@@ -4,8 +4,7 @@
 
 [🗣 News](https://t.me/s/txthinking_news)
 [💬 Chat](https://t.me/brookgroup)
-[🩸 Youtube](https://www.youtube.com/txthinking) 
-[❤️ Sponsor](https://github.com/sponsors/txthinking)
+[🩸 Youtube](https://www.youtube.com/txthinking)
 
 Jinbe可以添加开机自动启动命令
 
