@@ -42,7 +42,7 @@ func main() {
 		return
 	}
 	if len(os.Args) == 2 && (os.Args[1] == "version" || os.Args[1] == "-v" || os.Args[1] == "--version") {
-		fmt.Println("v20221122")
+		fmt.Println("v20230426")
 		return
 	}
 	if len(os.Args) == 2 && os.Args[1] == "list.hancock" {
@@ -240,9 +240,9 @@ func main() {
 			log.Println(err)
 		}
 	}()
-	err = cmd.Run()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Println(err)
+		log.Println(string(out))
 		os.Exit(1)
 		return
 	}
