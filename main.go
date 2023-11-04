@@ -42,7 +42,7 @@ func main() {
 		return
 	}
 	if len(os.Args) == 2 && (os.Args[1] == "version" || os.Args[1] == "-v" || os.Args[1] == "--version") {
-		fmt.Println("v20230426")
+		fmt.Println("v20231104")
 		return
 	}
 	if len(os.Args) == 2 && os.Args[1] == "list.hancock" {
@@ -57,29 +57,7 @@ func main() {
 		return
 	}
 	if len(os.Args) == 2 && os.Args[1] == "list" {
-		b, _ := exec.Command("crontab", "-l").Output()
-		l := strings.Split(string(b), "\n")
-		l1 := []string{}
-		for i, v := range l {
-			v = strings.TrimSpace(v)
-			if v != "" {
-				l1 = append(l1, v)
-				fmt.Println(strings.Replace(v, "@reboot", strconv.Itoa(i)+"\t", 1))
-			}
-		}
-		s, err := os.UserHomeDir()
-		if err != nil {
-			log.Println(err)
-			os.Exit(1)
-			return
-		}
-		b, err = json.Marshal(l1)
-		if err != nil {
-			log.Println(err)
-			os.Exit(1)
-			return
-		}
-		err = os.WriteFile(filepath.Join(s, ".jinbe"), b, 0644)
+		err := saveList(true)
 		if err != nil {
 			log.Println(err)
 			os.Exit(1)
@@ -138,6 +116,14 @@ func main() {
 			_, err := io.WriteString(stdin, strings.Join(l3, "\n")+"\n")
 			if err != nil {
 				log.Println(err)
+				os.Exit(1)
+				return
+			}
+			err = saveList(false)
+			if err != nil {
+				log.Println(err)
+				os.Exit(1)
+				return
 			}
 		}()
 		err = cmd.Run()
@@ -149,7 +135,7 @@ func main() {
 		time.Sleep(100 * time.Millisecond)
 		return
 	}
-
+	
 	c0 := ""
 	c1 := ""
 	a := ""
@@ -173,7 +159,7 @@ func main() {
 		}
 	}
 	a = strings.TrimSpace(a)
-
+	
 	if !strings.Contains(c0, "/") {
 		b, _ := exec.Command("which", c0).Output()
 		s := string(b)
@@ -201,7 +187,7 @@ func main() {
 	if a != "" {
 		c += " " + a
 	}
-
+	
 	b, _ := exec.Command("crontab", "-l").Output()
 	l := strings.Split(string(b), "\n")
 	l1 := []string{}
@@ -247,4 +233,38 @@ func main() {
 		return
 	}
 	time.Sleep(100 * time.Millisecond)
+	err = saveList(false)
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+		return
+	}
+}
+
+func saveList(printList bool) error {
+	b, _ := exec.Command("crontab", "-l").Output()
+	l := strings.Split(string(b), "\n")
+	l1 := []string{}
+	for i, v := range l {
+		v = strings.TrimSpace(v)
+		if v != "" {
+			l1 = append(l1, v)
+			if printList {
+				fmt.Println(strings.Replace(v, "@reboot", strconv.Itoa(i)+"\t", 1))
+			}
+		}
+	}
+	s, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	b, err = json.Marshal(l1)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(filepath.Join(s, ".jinbe"), b, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }
