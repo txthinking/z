@@ -2,7 +2,7 @@
 
 Zhen - process and cron manager
 
-> 名称取自 [先轸](https://zh.wikipedia.org/zh-sg/%E5%85%88%E8%BD%B8)
+> 名称取自 [先轸](https://shidian.baike.com/wikiid/7248758319247147773)
 
 ❤️ A project by [txthinking.com](https://www.txthinking.com)
 
