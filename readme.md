@@ -14,13 +14,13 @@ nami install joker zhen
 
 ### Usage
 
-Run zhen background after reboot, sudo or root required. Optional, but usually you need
+Run zhen background after reboot, **sudo or root required**. Optional, but usually you need
 
 ```
 zhen init
 ```
 
-Run zhen background now, sudo or root required
+Run zhen background now, **sudo or root required**
 
 ```
 joker zhen background
@@ -41,7 +41,7 @@ zhen: process and cron manager
     background            this subcommand must be executed first, recommand: joker zhen background,
                           sudo or root required, it will wait for the network to be ready
     <command>             run command now and run it after reboot
-    '* * * * *' <command> add command to cron task
+    '* * * * *' <command> add command to cron task. UTC
     all                   show all commands
     ps                    show running commands
     st <id>               stop command by SIGTERM
