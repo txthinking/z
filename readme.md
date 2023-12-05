@@ -26,7 +26,7 @@ Run zhen background now, **sudo or root required**
 joker zhen background
 ```
 
-Add a command **no** sudo or root required
+Add a command, **no** sudo or root required
 
 ```
 zhen brook server -l :9999 -p hello
