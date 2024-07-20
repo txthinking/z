@@ -1,72 +1,51 @@
-# Zhen
+# Z
 
-Zhen - process and cron manager
-
-> 名称取自 [先轸](https://shidian.baike.com/wikiid/7248758319247147773)
+z - process manager
 
 ❤️ A project by [txthinking.com](https://www.txthinking.com)
 
 ### Install via [nami](https://github.com/txthinking/nami)
 
 ```
-nami install joker zhen
+nami install z
 ```
 
 ### Usage
 
-Run zhen background after reboot, **sudo or root required**. Optional, but usually you need
+1. start z daemon and add z into system boot. [this step requires root privileges] and [z requires your system to support the IPv6 stack]
 
-```
-zhen init
-```
+    ```
+    z start
+    ```
+1. [Optional] Because z will start all the commands it manages at system boot, and your command could depend on certain environment variables, yet there are hardly any environment variables present right after the system starts. Thus, you will need to add the necessary environment variables according to the requirements of your command, for example:
+    ```
+    z e PATH $PATH
+    z e HOME /root
+    ```
+1. Add a command
 
-Run zhen background now, **sudo or root required**
-
-```
-joker zhen background
-```
-
-Add a command, **no** sudo or root required
-
-```
-zhen brook server -l :9999 -p hello
-```
+    ```
+    zhen brook server -l :9999 -p hello
+    ```
 
 Usage
 
 ```
-zhen: process and cron manager
+z - process manager
 
-    init                  run joker zhen background after reboot, sudo or root required
-    background            this subcommand must be executed first, recommand: joker zhen background,
-                          sudo or root required, it will wait for the network to be ready
-    <command>             run command now and run it after reboot
-    '* * * * *' <command> add command to cron task. UTC
-    all                   show all commands
-    ps                    show running commands
-    st <id>               stop command by SIGTERM
-    rs <id>               restart or start command
-    rm <id>               remove command
-    log <id>              show log of command
-    env <key> <value>     set env
-    env                   show all envs
-```
+    start                             start z daemon and add z into system boot [root required]
 
-### Env
+    <command> <arg1> <arg2> <...>     add and run command
+    a                                 print all commands
+    s <id>                            stop a command
+    r <id>                            restart a command
+    d <id>                            delete a command
 
-As you know, usually when the system just boots up, some environment variables do not exist, such as HOME, and the PATH variable is also relatively concise, and your command may depend on these environment variables, then you can use zhen to set.
+    e <k> <v>                         add environment variable
+    e                                 print all environment variables
 
-For example, set HOME
-```
-zhen env HOME /root
-```
-For example, set PATH to current PATH
-```
-zhen env PATH $PATH
-```
-Show all env
-```
-zhen env
+    <id>                              print stdout and stderr of command
+    z                                 print stdout and stderr of z
 ```
 
 ### Network
@@ -78,6 +57,3 @@ As you know, usually when the system just boots up, the network may not be ready
 There are many tools, such as systemd, supervisord, etc.
 But I need a simple, small, clean, no configuration tool.
 
-### Where are the old jinbe?
-
-It is in [master](https://github.com/txthinking/zhen/tree/master) branch.
