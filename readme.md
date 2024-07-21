@@ -25,7 +25,7 @@ nami install z
 1. Add a command
 
     ```
-    zhen brook server -l :9999 -p hello
+    z brook server -l :9999 -p hello
     ```
 
 Usage
