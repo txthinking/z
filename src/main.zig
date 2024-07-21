@@ -57,7 +57,7 @@ pub fn _main() !void {
         \\    z                                 print stdout and stderr of z
         \\
         \\
-        \\v20240720 https://github.com/txthinking/z
+        \\v20240722 https://github.com/txthinking/z
         \\
         \\
     ;
@@ -157,9 +157,12 @@ pub fn _main() !void {
     }
 
     var l = try allocator.alloc([]u8, args.len - 1);
+    var done: ?usize = null;
     defer {
-        for (l) |v| {
-            allocator.free(v);
+        if (done) |i| {
+            for (0..(i + 1)) |j| {
+                allocator.free(l[j]);
+            }
         }
         allocator.free(l);
     }
@@ -170,6 +173,7 @@ pub fn _main() !void {
                 const b = try allocator.alloc(u8, v.len);
                 @memcpy(b, v);
                 l[i] = b;
+                done = i;
                 continue;
             }
             if (std.mem.startsWith(u8, v, ".") or std.mem.containsAtLeast(u8, v, 1, "/")) {
@@ -178,8 +182,10 @@ pub fn _main() !void {
                 const b = try allocator.alloc(u8, b0.len);
                 @memcpy(b, b0);
                 l[i] = b;
+                done = i;
                 continue;
             }
+            // std.process.Child does not find exec on given env now, so find it first
             var s1 = std.ArrayList(u8).init(allocator);
             defer s1.deinit();
             var s2 = std.ArrayList(u8).init(allocator);
@@ -199,11 +205,13 @@ pub fn _main() !void {
             const b = try allocator.alloc(u8, s1.items.len - 1);
             @memcpy(b, s1.items[0 .. s1.items.len - 1]);
             l[i] = b;
+            done = i;
             continue;
         }
         const b = try allocator.alloc(u8, v.len);
         @memcpy(b, v);
         l[i] = b;
+        done = i;
     }
 
     var string = std.ArrayList(u8).init(allocator);
