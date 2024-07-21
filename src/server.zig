@@ -79,6 +79,21 @@ pub fn start(self: *Server) !void {
             }
         }
     }
+    const r2 = try helper.readFile(self.allocator, "/etc/.z/env.json");
+    if (r2) |r1| {
+        defer self.allocator.free(r1.b);
+        const p = try std.json.parseFromSlice([][]u8, self.allocator, r1.b[0..r1.n], .{ .allocate = .alloc_always });
+        defer p.deinit();
+        for (p.value) |v| {
+            var it = std.mem.splitScalar(u8, v, '=');
+            const k0 = it.next();
+            const v0 = it.next();
+            if (k0 != null and v0 != null) {
+                // put will copy all the memory of parameters
+                try self.envs.put(k0.?, v0.?);
+            }
+        }
+    }
     const r = try helper.readFile(self.allocator, "/etc/.z/command.json");
     if (r) |r1| {
         defer self.allocator.free(r1.b);
@@ -107,21 +122,6 @@ pub fn start(self: *Server) !void {
             try self.commands.append(c);
             const thread = try std.Thread.spawn(.{}, Server.run, .{ self, c });
             thread.detach();
-        }
-    }
-    const r2 = try helper.readFile(self.allocator, "/etc/.z/env.json");
-    if (r2) |r1| {
-        defer self.allocator.free(r1.b);
-        const p = try std.json.parseFromSlice([][]u8, self.allocator, r1.b[0..r1.n], .{ .allocate = .alloc_always });
-        defer p.deinit();
-        for (p.value) |v| {
-            var it = std.mem.splitScalar(u8, v, '=');
-            const k0 = it.next();
-            const v0 = it.next();
-            if (k0 != null and v0 != null) {
-                // put will copy all the memory of parameters
-                try self.envs.put(k0.?, v0.?);
-            }
         }
     }
     const addr = try std.net.Address.parseIp6("::1", 2);

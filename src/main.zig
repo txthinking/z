@@ -57,7 +57,7 @@ pub fn _main() !void {
         \\    z                                 print stdout and stderr of z
         \\
         \\
-        \\v20240722 https://github.com/txthinking/z
+        \\v20240723 https://github.com/txthinking/z
         \\
         \\
     ;
