@@ -33,7 +33,7 @@ Usage
 ```
 z - process manager
 
-    start                             start z daemon and add z into system boot [root required]
+    start                             start z daemon and add z into system boot [root and ipv6 stack required]
 
     <command> <arg1> <arg2> <...>     add and run command
     a                                 print all commands
