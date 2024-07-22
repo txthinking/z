@@ -46,6 +46,8 @@ z - process manager
 
     <id>                              print stdout and stderr of command
     z                                 print stdout and stderr of z
+
+    stop                              stop z daemon
 ```
 
 ### Network
