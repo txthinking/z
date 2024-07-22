@@ -177,6 +177,17 @@ fn _handle(self: *Server, conn: std.net.Server.Connection) !void {
         try self.endHandle(conn);
         return;
     }
+    if (p.value.len == 1 and std.mem.eql(u8, p.value[0], "stop")) {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        for (self.processes.items) |v| {
+            _ = try v.process.kill();
+        }
+        try self.endHandle(conn);
+        std.time.sleep(2 * std.time.ns_per_s);
+        std.process.exit(0);
+        return;
+    }
     if (p.value.len == 1 and std.mem.eql(u8, p.value[0], "a")) {
         self.mutex.lock();
         defer self.mutex.unlock();
@@ -218,9 +229,9 @@ fn _handle(self: *Server, conn: std.net.Server.Connection) !void {
         for (self.processes.items) |v| {
             if (v.id == id) {
                 _ = try v.process.kill();
-                std.time.sleep(2 * std.time.ns_per_s);
             }
         }
+        std.time.sleep(2 * std.time.ns_per_s);
         var cmd: ?Command = null;
         for (self.commands.items) |v| {
             if (v.id == id) {
@@ -241,9 +252,9 @@ fn _handle(self: *Server, conn: std.net.Server.Connection) !void {
         for (self.processes.items) |v| {
             if (v.id == id) {
                 _ = try v.process.kill();
-                std.time.sleep(1 * std.time.ns_per_s);
             }
         }
+        std.time.sleep(1 * std.time.ns_per_s);
         for (self.commands.items, 0..) |v, i| {
             if (v.id == id) {
                 const cmd = self.commands.orderedRemove(i);
