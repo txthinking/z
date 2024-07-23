@@ -210,61 +210,67 @@ fn _handle(self: *Server, conn: std.net.Server.Connection) !void {
         try self.endHandle(conn);
         return;
     }
-    if (p.value.len == 2 and std.mem.eql(u8, p.value[0], "s")) {
-        const id = try std.fmt.parseInt(i64, p.value[1], 10);
-        self.mutex.lock();
-        defer self.mutex.unlock();
-        for (self.processes.items) |v| {
-            if (v.id == id) {
-                _ = try v.process.kill();
+    if (p.value.len > 1 and std.mem.eql(u8, p.value[0], "s")) {
+        for (p.value[1..]) |v0| {
+            const id = try std.fmt.parseInt(i64, v0, 10);
+            self.mutex.lock();
+            defer self.mutex.unlock();
+            for (self.processes.items) |v| {
+                if (v.id == id) {
+                    _ = try v.process.kill();
+                }
             }
         }
         try self.endHandle(conn);
         return;
     }
-    if (p.value.len == 2 and std.mem.eql(u8, p.value[0], "r")) {
-        const id = try std.fmt.parseInt(i64, p.value[1], 10);
+    if (p.value.len > 1 and std.mem.eql(u8, p.value[0], "r")) {
         self.mutex.lock();
         defer self.mutex.unlock();
-        for (self.processes.items) |v| {
-            if (v.id == id) {
-                _ = try v.process.kill();
+        for (p.value[1..]) |v0| {
+            const id = try std.fmt.parseInt(i64, v0, 10);
+            for (self.processes.items) |v| {
+                if (v.id == id) {
+                    _ = try v.process.kill();
+                }
             }
-        }
-        std.time.sleep(2 * std.time.ns_per_s);
-        var cmd: ?Command = null;
-        for (self.commands.items) |v| {
-            if (v.id == id) {
-                cmd = v;
+            std.time.sleep(2 * std.time.ns_per_s);
+            var cmd: ?Command = null;
+            for (self.commands.items) |v| {
+                if (v.id == id) {
+                    cmd = v;
+                }
             }
-        }
-        if (cmd) |cmd1| {
-            const thread = try std.Thread.spawn(.{}, Server.run, .{ self, cmd1 });
-            thread.detach();
+            if (cmd) |cmd1| {
+                const thread = try std.Thread.spawn(.{}, Server.run, .{ self, cmd1 });
+                thread.detach();
+            }
         }
         try self.endHandle(conn);
         return;
     }
-    if (p.value.len == 2 and std.mem.eql(u8, p.value[0], "d")) {
-        const id = try std.fmt.parseInt(i64, p.value[1], 10);
+    if (p.value.len > 1 and std.mem.eql(u8, p.value[0], "d")) {
         self.mutex.lock();
         defer self.mutex.unlock();
-        for (self.processes.items) |v| {
-            if (v.id == id) {
-                _ = try v.process.kill();
+        for (p.value[1..]) |v0| {
+            const id = try std.fmt.parseInt(i64, v0, 10);
+            for (self.processes.items) |v| {
+                if (v.id == id) {
+                    _ = try v.process.kill();
+                }
+            }
+            for (self.commands.items, 0..) |v, i| {
+                if (v.id == id) {
+                    const cmd = self.commands.orderedRemove(i);
+                    for (cmd.args) |vv| {
+                        self.allocator.free(vv);
+                    }
+                    self.allocator.free(cmd.args);
+                    break;
+                }
             }
         }
         std.time.sleep(1 * std.time.ns_per_s);
-        for (self.commands.items, 0..) |v, i| {
-            if (v.id == id) {
-                const cmd = self.commands.orderedRemove(i);
-                for (cmd.args) |vv| {
-                    self.allocator.free(vv);
-                }
-                self.allocator.free(cmd.args);
-                break;
-            }
-        }
         try self.saveCommands();
         try self.endHandle(conn);
         return;

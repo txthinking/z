@@ -58,7 +58,7 @@ pub fn _main() !void {
         \\
         \\    stop                              stop z daemon
         \\
-        \\v20240726 https://github.com/txthinking/z
+        \\v20240727 https://github.com/txthinking/z
         \\
         \\
     ;
