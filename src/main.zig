@@ -5,6 +5,7 @@ const client = @import("./client.zig");
 
 pub fn main() void {
     _main() catch |err| {
+        std.debug.print("{}\n", .{err});
         helper.syslog(err);
         if (err == error.ConnectionRefused) {
             std.debug.print("z might not be running?\n", .{});
@@ -30,6 +31,7 @@ pub fn _main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer {
         if (gpa.deinit() != .ok) {
+            std.debug.print("{}\n", .{error.MemoryLeak});
             helper.syslog(error.MemoryLeak);
         }
     }
@@ -58,7 +60,7 @@ pub fn _main() !void {
         \\
         \\    stop                              stop z daemon
         \\
-        \\v20240727 https://github.com/txthinking/z
+        \\v20240927 https://github.com/txthinking/z
         \\
         \\
     ;
@@ -149,10 +151,10 @@ pub fn _main() !void {
                     std.c.exit(-1);
                 }
                 _ = std.c.umask(0);
-                const n = helper.getdtablesize();
-                for (0..@intCast(n)) |i| {
-                    _ = std.c.close(@intCast(i));
-                }
+                // const n = std.c.sysconf(std.c.OPEN_MAX);
+                // for (0..@intCast(n)) |i| {
+                //     _ = std.c.close(@intCast(i));
+                // }
                 var s = try Server.init(allocator);
                 defer s.deinit();
                 s.start() catch |err| {

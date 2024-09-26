@@ -10,7 +10,6 @@ const datetime = @import("datetime");
 var mutex = std.Thread.Mutex{};
 
 pub fn syslog(err: anyerror) void {
-    std.debug.print("{}\n", .{err});
     std.c.syslog(c.LOG_ERR, "zhen: %s", @as([*c]const u8, @errorName(err)));
 }
 
@@ -83,6 +82,11 @@ pub fn testNetwork(dns: []const u8) !void {
     const addr = try std.net.Address.parseIp6(dns, 53);
     const s = try std.posix.socket(std.posix.AF.INET6, std.posix.SOCK.DGRAM, std.posix.IPPROTO.UDP);
     defer std.posix.close(s);
+    const recv_timeout = std.posix.timeval{
+        .tv_sec = 3,
+        .tv_usec = 0,
+    };
+    try std.posix.setsockopt(s, std.posix.SOL.SOCKET, std.posix.SO.RCVTIMEO, &std.mem.toBytes(recv_timeout));
     try std.posix.connect(s, &addr.any, addr.getOsSockLen());
     const in = .{ 0x67, 0x88, 0x1, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xa, 0x74, 0x78, 0x74, 0x68, 0x69, 0x6e, 0x6b, 0x69, 0x6e, 0x67, 0x3, 0x63, 0x6f, 0x6d, 0x0, 0x0, 0x1c, 0x0, 0x1 };
     _ = try std.posix.send(s, &in, 0);
