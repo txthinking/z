@@ -10,7 +10,6 @@ commands: std.ArrayList(Command),
 processes: std.ArrayList(Process),
 envs: std.process.EnvMap,
 mutex: std.Thread.Mutex,
-server: std.net.Server,
 
 const Command = struct {
     id: i64,
@@ -36,7 +35,6 @@ pub fn init(allocator: std.mem.Allocator) !Server {
         .processes = l1,
         .envs = es,
         .mutex = m,
-        .server = undefined,
     };
     return s;
 }
@@ -91,61 +89,60 @@ pub fn start(self: *Server) !void {
             }
         }
     }
-    {
-        const addr = try std.net.Address.parseIp6("::1", 2);
-        self.server = try addr.listen(.{});
-        errdefer self.server.deinit();
-        const r2 = try helper.readFile(self.allocator, "/etc/.z/env.json");
-        if (r2) |r1| {
-            defer self.allocator.free(r1.b);
-            const p = try std.json.parseFromSlice([][]u8, self.allocator, r1.b[0..r1.n], .{ .allocate = .alloc_always });
-            defer p.deinit();
-            for (p.value) |v| {
-                var it = std.mem.splitScalar(u8, v, '=');
-                const k0 = it.next();
-                const v0 = it.next();
-                if (k0 != null and v0 != null) {
-                    // put will copy all the memory of parameters
-                    try self.envs.put(k0.?, v0.?);
-                }
-            }
-        }
-        const r = try helper.readFile(self.allocator, "/etc/.z/command.json");
-        if (r) |r1| {
-            defer self.allocator.free(r1.b);
-            const p = try std.json.parseFromSlice([]Command, self.allocator, r1.b[0..r1.n], .{ .allocate = .alloc_always });
-            defer p.deinit();
-            for (p.value) |v| {
-                var args = try self.allocator.alloc([]u8, v.args.len);
-                var done: ?usize = null;
-                errdefer {
-                    if (done) |i| {
-                        for (0..(i + 1)) |j| {
-                            self.allocator.free(args[j]);
-                        }
-                    }
-                    self.allocator.free(args);
-                }
-                for (v.args, 0..) |vv, i| {
-                    const s = try self.allocator.dupe(u8, vv);
-                    done = i;
-                    args[i] = s;
-                }
-                const c: Command = .{
-                    .id = v.id,
-                    .args = args,
-                };
-                try self.commands.append(c);
-                const thread = try std.Thread.spawn(.{}, Server.run, .{ self, c });
-                thread.detach();
+    const addr = try std.net.Address.parseIp6("::1", 2);
+    var server = try addr.listen(.{});
+    defer server.deinit();
+    const r2 = try helper.readFile(self.allocator, "/etc/.z/env.json");
+    if (r2) |r1| {
+        defer self.allocator.free(r1.b);
+        const p = try std.json.parseFromSlice([][]u8, self.allocator, r1.b[0..r1.n], .{ .allocate = .alloc_always });
+        defer p.deinit();
+        for (p.value) |v| {
+            var it = std.mem.splitScalar(u8, v, '=');
+            const k0 = it.next();
+            const v0 = it.next();
+            if (k0 != null and v0 != null) {
+                // put will copy all the memory of parameters
+                try self.envs.put(k0.?, v0.?);
             }
         }
     }
-    while (true) {
-        errdefer {
-            std.time.sleep(3 * std.time.ns_per_s);
+    errdefer {
+        // wait for sub threads ready first, better communication way should probably be used
+        std.time.sleep(3 * std.time.ns_per_s);
+    }
+    const r = try helper.readFile(self.allocator, "/etc/.z/command.json");
+    if (r) |r1| {
+        defer self.allocator.free(r1.b);
+        const p = try std.json.parseFromSlice([]Command, self.allocator, r1.b[0..r1.n], .{ .allocate = .alloc_always });
+        defer p.deinit();
+        for (p.value) |v| {
+            var args = try self.allocator.alloc([]u8, v.args.len);
+            var done: ?usize = null;
+            errdefer {
+                if (done) |i| {
+                    for (0..(i + 1)) |j| {
+                        self.allocator.free(args[j]);
+                    }
+                }
+                self.allocator.free(args);
+            }
+            for (v.args, 0..) |vv, i| {
+                const s = try self.allocator.dupe(u8, vv);
+                done = i;
+                args[i] = s;
+            }
+            const c: Command = .{
+                .id = v.id,
+                .args = args,
+            };
+            try self.commands.append(c);
+            const thread = try std.Thread.spawn(.{}, Server.run, .{ self, c });
+            thread.detach();
         }
-        const conn = try self.server.accept();
+    }
+    while (true) {
+        const conn = try server.accept();
         const thread = try std.Thread.spawn(.{}, Server.handle, .{ self, conn });
         thread.detach();
     }
@@ -238,15 +235,21 @@ fn _handle(self: *Server, conn: std.net.Server.Connection) !void {
     }
     if (p.value.len > 1 and std.mem.eql(u8, p.value[0], "r")) {
         self.mutex.lock();
-        defer self.mutex.unlock();
         for (p.value[1..]) |v0| {
+            errdefer self.mutex.unlock();
             const id = try std.fmt.parseInt(i64, v0, 10);
             for (self.processes.items) |v| {
                 if (v.id == id) {
                     _ = try v.process.kill();
                 }
             }
-            std.time.sleep(2 * std.time.ns_per_s);
+        }
+        self.mutex.unlock();
+        std.time.sleep(3 * std.time.ns_per_s);
+        self.mutex.lock();
+        for (p.value[1..]) |v0| {
+            errdefer self.mutex.unlock();
+            const id = try std.fmt.parseInt(i64, v0, 10);
             var cmd: ?Command = null;
             for (self.commands.items) |v| {
                 if (v.id == id) {
@@ -258,6 +261,7 @@ fn _handle(self: *Server, conn: std.net.Server.Connection) !void {
                 thread.detach();
             }
         }
+        self.mutex.unlock();
         try self.endHandle(conn);
         return;
     }
@@ -282,7 +286,7 @@ fn _handle(self: *Server, conn: std.net.Server.Connection) !void {
                 }
             }
         }
-        std.time.sleep(1 * std.time.ns_per_s);
+        std.time.sleep(3 * std.time.ns_per_s);
         try self.saveCommands();
         try self.endHandle(conn);
         return;
