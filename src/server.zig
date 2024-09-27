@@ -10,6 +10,7 @@ commands: std.ArrayList(Command),
 processes: std.ArrayList(Process),
 envs: std.process.EnvMap,
 mutex: std.Thread.Mutex,
+server: std.net.Server,
 
 const Command = struct {
     id: i64,
@@ -35,18 +36,28 @@ pub fn init(allocator: std.mem.Allocator) !Server {
         .processes = l1,
         .envs = es,
         .mutex = m,
+        .server = undefined,
     };
     return s;
 }
 
 pub fn deinit(self: *Server) void {
+    var wait = false;
     self.mutex.lock();
-    defer self.mutex.unlock();
-    for (self.processes.items) |v| {
-        _ = v.process.kill() catch |err| {
-            self.e(err);
-        };
+    if (self.processes.items.len > 0) {
+        for (self.processes.items) |v| {
+            _ = v.process.kill() catch |err| {
+                self.e(err);
+            };
+        }
+        wait = true;
     }
+    self.mutex.unlock();
+    if (wait) {
+        // wait for sub threads exit first, better communication way should probably be used
+        std.time.sleep(3 * std.time.ns_per_s);
+    }
+    self.mutex.lock();
     for (self.commands.items) |v| {
         for (v.args) |vv| {
             self.allocator.free(vv);
@@ -57,6 +68,7 @@ pub fn deinit(self: *Server) void {
     self.commands.deinit();
     self.envs.deinit();
     self.z.close();
+    self.mutex.unlock();
 }
 
 pub fn e(self: *Server, err: anyerror) void {
@@ -79,60 +91,64 @@ pub fn start(self: *Server) !void {
             }
         }
     }
-    const r2 = try helper.readFile(self.allocator, "/etc/.z/env.json");
-    if (r2) |r1| {
-        defer self.allocator.free(r1.b);
-        const p = try std.json.parseFromSlice([][]u8, self.allocator, r1.b[0..r1.n], .{ .allocate = .alloc_always });
-        defer p.deinit();
-        for (p.value) |v| {
-            var it = std.mem.splitScalar(u8, v, '=');
-            const k0 = it.next();
-            const v0 = it.next();
-            if (k0 != null and v0 != null) {
-                // put will copy all the memory of parameters
-                try self.envs.put(k0.?, v0.?);
-            }
-        }
-    }
-    const r = try helper.readFile(self.allocator, "/etc/.z/command.json");
-    if (r) |r1| {
-        defer self.allocator.free(r1.b);
-        const p = try std.json.parseFromSlice([]Command, self.allocator, r1.b[0..r1.n], .{ .allocate = .alloc_always });
-        defer p.deinit();
-        for (p.value) |v| {
-            var args = try self.allocator.alloc([]u8, v.args.len);
-            var done: ?usize = null;
-            errdefer {
-                if (done) |i| {
-                    for (0..(i + 1)) |j| {
-                        self.allocator.free(args[j]);
-                    }
+    {
+        const addr = try std.net.Address.parseIp6("::1", 2);
+        self.server = try addr.listen(.{});
+        errdefer self.server.deinit();
+        const r2 = try helper.readFile(self.allocator, "/etc/.z/env.json");
+        if (r2) |r1| {
+            defer self.allocator.free(r1.b);
+            const p = try std.json.parseFromSlice([][]u8, self.allocator, r1.b[0..r1.n], .{ .allocate = .alloc_always });
+            defer p.deinit();
+            for (p.value) |v| {
+                var it = std.mem.splitScalar(u8, v, '=');
+                const k0 = it.next();
+                const v0 = it.next();
+                if (k0 != null and v0 != null) {
+                    // put will copy all the memory of parameters
+                    try self.envs.put(k0.?, v0.?);
                 }
-                self.allocator.free(args);
             }
-            for (v.args, 0..) |vv, i| {
-                const s = try self.allocator.dupe(u8, vv);
-                done = i;
-                args[i] = s;
+        }
+        const r = try helper.readFile(self.allocator, "/etc/.z/command.json");
+        if (r) |r1| {
+            defer self.allocator.free(r1.b);
+            const p = try std.json.parseFromSlice([]Command, self.allocator, r1.b[0..r1.n], .{ .allocate = .alloc_always });
+            defer p.deinit();
+            for (p.value) |v| {
+                var args = try self.allocator.alloc([]u8, v.args.len);
+                var done: ?usize = null;
+                errdefer {
+                    if (done) |i| {
+                        for (0..(i + 1)) |j| {
+                            self.allocator.free(args[j]);
+                        }
+                    }
+                    self.allocator.free(args);
+                }
+                for (v.args, 0..) |vv, i| {
+                    const s = try self.allocator.dupe(u8, vv);
+                    done = i;
+                    args[i] = s;
+                }
+                const c: Command = .{
+                    .id = v.id,
+                    .args = args,
+                };
+                try self.commands.append(c);
+                const thread = try std.Thread.spawn(.{}, Server.run, .{ self, c });
+                thread.detach();
             }
-            const c: Command = .{
-                .id = v.id,
-                .args = args,
-            };
-            try self.commands.append(c);
-            const thread = try std.Thread.spawn(.{}, Server.run, .{ self, c });
-            thread.detach();
         }
     }
-    const addr = try std.net.Address.parseIp6("::1", 2);
-    var s = try addr.listen(.{});
-    defer s.deinit();
     while (true) {
-        const conn = try s.accept();
+        errdefer {
+            std.time.sleep(3 * std.time.ns_per_s);
+        }
+        const conn = try self.server.accept();
         const thread = try std.Thread.spawn(.{}, Server.handle, .{ self, conn });
         thread.detach();
     }
-    // TODO: looks like we can't shundown net.Server for now in zig 0.13.0, I tried shutdown the underlying fd recv, but does not work
 }
 
 fn handle(self: *Server, conn: std.net.Server.Connection) void {
@@ -178,13 +194,9 @@ fn _handle(self: *Server, conn: std.net.Server.Connection) !void {
         return;
     }
     if (p.value.len == 1 and std.mem.eql(u8, p.value[0], "stop")) {
-        self.mutex.lock();
-        defer self.mutex.unlock();
-        for (self.processes.items) |v| {
-            _ = try v.process.kill();
-        }
         try self.endHandle(conn);
-        std.time.sleep(2 * std.time.ns_per_s);
+        // zig 0.13.0: server.deinit will not stop accept immediately, it will set server to undefined, then will crash in next request, so exit here now.
+        self.deinit();
         std.process.exit(0);
         return;
     }
