@@ -56,6 +56,5 @@ As you know, usually when the system just boots up, the network may not be ready
 
 ### Why
 
-There are many tools, such as systemd, supervisord, etc.
-But I need a simple, small, clean, no configuration tool.
+Because [systemd](https://nosystemd.org/) has made the world more complicated.
 
