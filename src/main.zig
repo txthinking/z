@@ -60,7 +60,7 @@ pub fn _main() !void {
         \\
         \\    stop                              stop z daemon
         \\
-        \\v20240927 https://github.com/txthinking/z
+        \\v20250103 https://github.com/txthinking/z
         \\
         \\
     ;
@@ -87,38 +87,53 @@ pub fn _main() !void {
         return error.RootRequired;
     }
 
-    const r = crontabL(allocator) catch null;
-    defer {
-        if (r) |r1| {
-            allocator.free(r1.b);
-        }
-    }
-    var cp = std.process.Child.init(&.{"crontab"}, allocator);
-    cp.stdin_behavior = .Pipe;
-    try cp.spawn();
-    if (r) |r1| {
-        var it = std.mem.splitScalar(u8, r1.b[0..r1.n], '\n');
-        while (it.next()) |v| {
-            if (v.len == 0 or std.mem.containsAtLeast(u8, v, 1, "z start")) {
-                continue;
+    if (std.fs.cwd().access("/etc/openwrt_release", .{})) |_| {
+        const s =
+            \\
+            \\On OpenWrt:
+            \\    - z works file
+            \\    - z will not start automatically on boot, you may need to add a line to /etc/rc.local: /path/to/z start
+            \\    - seeing this message generally means that z has been started
+            \\    - you may also need: z e HOME $HOME
+            \\    - you may also need: z e PATH $PATH
+            \\
+            \\
+        ;
+        try stdout.print(s, .{});
+    } else |_| {
+        const r = crontabL(allocator) catch null;
+        defer {
+            if (r) |r1| {
+                allocator.free(r1.b);
             }
-            errdefer _ = cp.wait() catch .Unknown;
-            try cp.stdin.?.writeAll(v);
-            try cp.stdin.?.writeAll("\n");
         }
+        var cp = std.process.Child.init(&.{"crontab"}, allocator);
+        cp.stdin_behavior = .Pipe;
+        try cp.spawn();
+        if (r) |r1| {
+            var it = std.mem.splitScalar(u8, r1.b[0..r1.n], '\n');
+            while (it.next()) |v| {
+                if (v.len == 0 or std.mem.containsAtLeast(u8, v, 1, "z start")) {
+                    continue;
+                }
+                errdefer _ = cp.wait() catch .Unknown;
+                try cp.stdin.?.writeAll(v);
+                try cp.stdin.?.writeAll("\n");
+            }
+        }
+        {
+            errdefer _ = cp.wait() catch .Unknown;
+            try cp.stdin.?.writeAll("@reboot ");
+            const bz = try allocator.alloc(u8, 4 * 1024);
+            defer allocator.free(bz);
+            const bz1 = try std.fs.selfExePath(bz);
+            try cp.stdin.?.writeAll(bz1);
+            try cp.stdin.?.writeAll(" start\n");
+            cp.stdin.?.close();
+            cp.stdin = null;
+        }
+        _ = try cp.wait();
     }
-    {
-        errdefer _ = cp.wait() catch .Unknown;
-        try cp.stdin.?.writeAll("@reboot ");
-        const bz = try allocator.alloc(u8, 4 * 1024);
-        defer allocator.free(bz);
-        const bz1 = try std.fs.selfExePath(bz);
-        try cp.stdin.?.writeAll(bz1);
-        try cp.stdin.?.writeAll(" start\n");
-        cp.stdin.?.close();
-        cp.stdin = null;
-    }
-    _ = try cp.wait();
 
     const b = try allocator.alloc(u8, 8);
     defer allocator.free(b);
@@ -204,10 +219,15 @@ fn crontabL(allocator: std.mem.Allocator) !?struct { b: []u8, n: usize } {
 }
 
 test "simple test" {
-    // std.testing.refAllDecls(@This());
+    std.testing.refAllDecls(@This());
     // var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     // defer {
     //     _ = gpa.deinit();
     // }
     // const allocator = gpa.allocator();
+    if (std.fs.cwd().access("/etc/openwrt_release", .{})) |_| {
+        std.debug.print("hello, a.\n", .{});
+    } else |_| {
+        std.debug.print("hello, b.\n", .{});
+    }
 }

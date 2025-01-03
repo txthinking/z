@@ -40,21 +40,21 @@ pub fn init(allocator: std.mem.Allocator) !Server {
 }
 
 pub fn deinit(self: *Server) void {
-    var wait = false;
     self.mutex.lock();
     if (self.processes.items.len > 0) {
         for (self.processes.items) |v| {
             _ = v.process.kill() catch |err| {
                 self.e(err);
             };
+            while (true) {
+                if (v.process.term != null) {
+                    break;
+                }
+                std.time.sleep(1 * std.time.ns_per_s);
+            }
         }
-        wait = true;
     }
     self.mutex.unlock();
-    if (wait) {
-        // wait for sub threads exit first, better communication way should probably be used
-        std.time.sleep(3 * std.time.ns_per_s);
-    }
     self.mutex.lock();
     for (self.commands.items) |v| {
         for (v.args) |vv| {
@@ -227,6 +227,12 @@ fn _handle(self: *Server, conn: std.net.Server.Connection) !void {
             for (self.processes.items) |v| {
                 if (v.id == id) {
                     _ = try v.process.kill();
+                    while (true) {
+                        if (v.process.term != null) {
+                            break;
+                        }
+                        std.time.sleep(1 * std.time.ns_per_s);
+                    }
                 }
             }
         }
@@ -241,12 +247,15 @@ fn _handle(self: *Server, conn: std.net.Server.Connection) !void {
             for (self.processes.items) |v| {
                 if (v.id == id) {
                     _ = try v.process.kill();
+                    while (true) {
+                        if (v.process.term != null) {
+                            break;
+                        }
+                        std.time.sleep(1 * std.time.ns_per_s);
+                    }
                 }
             }
         }
-        self.mutex.unlock();
-        std.time.sleep(3 * std.time.ns_per_s);
-        self.mutex.lock();
         for (p.value[1..]) |v0| {
             errdefer self.mutex.unlock();
             const id = try std.fmt.parseInt(i64, v0, 10);
@@ -273,6 +282,12 @@ fn _handle(self: *Server, conn: std.net.Server.Connection) !void {
             for (self.processes.items) |v| {
                 if (v.id == id) {
                     _ = try v.process.kill();
+                    while (true) {
+                        if (v.process.term != null) {
+                            break;
+                        }
+                        std.time.sleep(1 * std.time.ns_per_s);
+                    }
                 }
             }
             for (self.commands.items, 0..) |v, i| {
@@ -286,7 +301,6 @@ fn _handle(self: *Server, conn: std.net.Server.Connection) !void {
                 }
             }
         }
-        std.time.sleep(3 * std.time.ns_per_s);
         try self.saveCommands();
         try self.endHandle(conn);
         return;
